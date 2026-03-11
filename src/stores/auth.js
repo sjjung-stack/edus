@@ -99,22 +99,30 @@ export const useAuthStore = defineStore('auth', () => {
       }
     }
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      user.value = session.user
-      await ensureProfile(session.user)
-    }
-    loading.value = false
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         user.value = session.user
         await ensureProfile(session.user)
-      } else {
-        user.value = null
-        profile.value = null
       }
-    })
+    } catch (e) {
+      console.warn('getSession error:', e)
+    }
+    loading.value = false
+
+    try {
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          user.value = session.user
+          await ensureProfile(session.user)
+        } else {
+          user.value = null
+          profile.value = null
+        }
+      })
+    } catch (e) {
+      console.warn('onAuthStateChange error:', e)
+    }
   }
 
   async function signUp(email, password, fullName, selectedRole = 'student') {

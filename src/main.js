@@ -11,7 +11,10 @@ const pinia = createPinia()
 app.use(pinia)
 
 const auth = useAuthStore()
-auth.init().then(() => {
+auth.init().catch(e => {
+  console.warn('Auth init error:', e)
+  auth.loading = false
+}).finally(() => {
   app.use(router)
   app.mount('#app')
 })
