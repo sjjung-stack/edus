@@ -38,6 +38,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useCourseStore } from '../../stores/courses'
+import { isDemoMode, mockCourses } from '../../lib/mockData'
 
 const store = useCourseStore()
 const search = ref('')
@@ -45,32 +46,49 @@ let timeout = null
 
 function debouncedSearch() {
   clearTimeout(timeout)
-  timeout = setTimeout(() => store.fetchCourses(search.value), 300)
+  if (isDemoMode()) {
+    const q = search.value.toLowerCase()
+    store.courses = q ? mockCourses.filter(c => c.is_published && c.title.toLowerCase().includes(q)) : mockCourses.filter(c => c.is_published)
+  } else {
+    timeout = setTimeout(() => store.fetchCourses(search.value), 300)
+  }
 }
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString('ko-KR')
 }
 
-onMounted(() => store.fetchCourses())
+onMounted(() => {
+  if (isDemoMode()) {
+    store.courses = mockCourses.filter(c => c.is_published)
+    store.loading = false
+  } else {
+    store.fetchCourses()
+  }
+})
 </script>
 
 <style scoped>
 .course-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;
 }
 .course-card {
-  background: white; border-radius: 12px; overflow: hidden;
-  box-shadow: var(--shadow); border: 1px solid var(--gray-100);
-  cursor: pointer; transition: all 0.2s;
+  background: white; border-radius: 24px; overflow: hidden;
+  box-shadow: var(--shadow); border: 3px solid rgba(255,107,157,0.1);
+  cursor: pointer; transition: all 0.3s;
 }
-.course-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.course-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
+.course-card:nth-child(1) .course-thumb { background: linear-gradient(135deg, #ff9a9e, #fecfef); }
+.course-card:nth-child(2) .course-thumb { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+.course-card:nth-child(3) .course-thumb { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+.course-card:nth-child(4) .course-thumb { background: linear-gradient(135deg, #c3cfe2, #dee4f7); }
+.course-card:nth-child(5) .course-thumb { background: linear-gradient(135deg, #d4fc79, #96e6a1); }
 .course-thumb {
-  height: 140px; background: linear-gradient(135deg, #667eea, #764ba2);
-  display: flex; align-items: center; justify-content: center; font-size: 48px;
+  height: 150px; background: linear-gradient(135deg, #ff9bc1, #b07dff);
+  display: flex; align-items: center; justify-content: center; font-size: 56px;
 }
-.course-body { padding: 16px; }
-.course-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--gray-800); }
-.course-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 12px; line-height: 1.5; }
-.course-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-400); }
+.course-body { padding: 20px; }
+.course-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: var(--gray-800); }
+.course-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 14px; line-height: 1.6; font-weight: 500; }
+.course-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-400); font-weight: 600; }
 </style>

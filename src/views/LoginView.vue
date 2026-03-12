@@ -1,8 +1,9 @@
 <template>
   <div class="auth-page">
     <div class="auth-card">
-      <h1>LMS 로그인</h1>
-      <p class="subtitle">수강관리시스템에 오신 것을 환영합니다</p>
+      <div style="font-size:48px;text-align:center;margin-bottom:8px;animation: bounce 2s infinite;">🌈</div>
+      <h1>배움터 로그인</h1>
+      <p class="subtitle">재미있는 배움의 세계에 오신 것을 환영해요!</p>
 
       <div v-if="error" class="toast toast-error" style="position:static;margin-bottom:16px;">
         {{ error }}
@@ -74,48 +75,48 @@ async function handleLogin() {
   }
 }
 
-const demoAccounts = {
-  admin: { email: 'admin1773219058834@lms.test', password: 'Test1234!!' },
-  instructor: { email: 'instr1773219058834@lms.test', password: 'Test1234!!' },
-  student: { email: 'stu1773219058834@lms.test', password: 'Test1234!!' }
+const demoProfiles = {
+  admin: { full_name: '박운영', email: 'admin@demo.lms', role: 'admin' },
+  instructor: { full_name: '김전문', email: 'instructor@demo.lms', role: 'instructor' },
+  student: { full_name: '이열공', email: 'student@demo.lms', role: 'student' }
 }
 
 const demoLoading = ref(false)
 
-async function demoLogin(role) {
-  demoLoading.value = true
-  error.value = ''
-  try {
-    const acc = demoAccounts[role]
-    await auth.signIn(acc.email, acc.password)
-    router.push('/')
-  } catch (e) {
-    error.value = `데모 로그인 실패: ${e.message}. 회원가입 후 실제 계정으로 로그인해 주세요.`
-  } finally {
-    demoLoading.value = false
-  }
+function demoLogin(role) {
+  const p = demoProfiles[role]
+  const mockId = `demo-${role}-${Date.now()}`
+  auth.user = { id: mockId, email: p.email, user_metadata: { full_name: p.full_name, role: p.role } }
+  auth.profile = { id: mockId, ...p }
+  auth.loading = false
+  localStorage.setItem('lms_demo_user', JSON.stringify({ user: auth.user, profile: auth.profile }))
+  router.push('/')
 }
 </script>
 
 <style scoped>
 .demo-section {
-  margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gray-200);
+  margin-top: 28px; padding-top: 28px; border-top: 3px dashed rgba(255, 107, 157, 0.25);
 }
 .demo-title {
-  text-align: center; font-size: 13px; font-weight: 600;
-  color: var(--gray-400); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+  text-align: center; font-size: 14px; font-weight: 700;
+  color: var(--primary); margin-bottom: 14px; letter-spacing: 0.5px;
 }
 .demo-buttons {
-  display: flex; gap: 8px;
+  display: flex; gap: 10px;
 }
 .demo-btn {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 12px 8px; border: 2px solid var(--gray-200); border-radius: var(--radius);
-  background: white; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 600;
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 16px 8px; border: 3px solid #fce4ec; border-radius: 20px;
+  background: linear-gradient(180deg, #fff5f9, white); cursor: pointer;
+  transition: all 0.3s; font-size: 14px; font-weight: 700; color: var(--gray-700);
 }
-.demo-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.demo-admin:hover { border-color: var(--danger); color: var(--danger); }
-.demo-instructor:hover { border-color: var(--warning); color: #92400e; }
-.demo-student:hover { border-color: var(--secondary); color: var(--secondary); }
-.demo-icon { font-size: 24px; }
+.demo-btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: var(--shadow-md); }
+.demo-btn:active { transform: translateY(0) scale(0.98); }
+.demo-admin:hover { border-color: #ff6b6b; background: linear-gradient(180deg, #ffe0e0, white); color: #cc3333; }
+.demo-instructor:hover { border-color: #ffcc33; background: linear-gradient(180deg, #fff8e0, white); color: #8a6d00; }
+.demo-student:hover { border-color: #45caff; background: linear-gradient(180deg, #e0f5ff, white); color: #1a6faa; }
+.demo-icon { font-size: 32px; }
+
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 </style>

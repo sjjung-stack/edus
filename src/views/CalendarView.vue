@@ -111,8 +111,8 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/auth'
+import { isDemoMode, mockCourses, mockAssignments, mockEnrollments } from '../lib/mockData'
 
 const auth = useAuthStore()
 const now = new Date()
@@ -266,16 +266,21 @@ function selectDay(day) {
 }
 
 async function loadData() {
+  if (isDemoMode()) {
+    courses.value = mockCourses.filter(c => c.is_published)
+    assignments.value = mockAssignments
+    enrollments.value = mockEnrollments
+    return
+  }
   try {
+    const { supabase } = await import('../lib/supabase')
     const { data: c } = await supabase
       .from('courses')
       .select('*, instructor:profiles!instructor_id(full_name)')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
     courses.value = c || []
-
     const courseIds = (c || []).map(x => x.id)
-
     if (courseIds.length) {
       const { data: a } = await supabase
         .from('assignments')
@@ -283,30 +288,18 @@ async function loadData() {
         .in('course_id', courseIds)
       assignments.value = a || []
     }
-
     if (auth.isStudent && auth.user?.id) {
-      const { data: e } = await supabase
-        .from('enrollments')
-        .select('*, courses(title)')
-        .eq('student_id', auth.user.id)
+      const { data: e } = await supabase.from('enrollments').select('*, courses(title)').eq('student_id', auth.user.id)
       enrollments.value = e || []
-    } else if (auth.isInstructor && auth.user?.id) {
-      const instrCourseIds = (c || []).filter(x => x.instructor_id === auth.user.id).map(x => x.id)
-      if (instrCourseIds.length) {
-        const { data: e } = await supabase
-          .from('enrollments')
-          .select('*, courses(title)')
-          .in('course_id', instrCourseIds)
-        enrollments.value = e || []
-      }
     } else if (auth.isAdmin) {
-      const { data: e } = await supabase
-        .from('enrollments')
-        .select('*, courses(title)')
+      const { data: e } = await supabase.from('enrollments').select('*, courses(title)')
       enrollments.value = e || []
     }
   } catch (e) {
-    console.warn('Calendar data load:', e)
+    console.warn('Calendar fallback to mock:', e)
+    courses.value = mockCourses.filter(c => c.is_published)
+    assignments.value = mockAssignments
+    enrollments.value = mockEnrollments
   }
 }
 

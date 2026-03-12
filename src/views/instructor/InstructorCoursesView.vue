@@ -94,6 +94,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useCourseStore } from '../../stores/courses'
+import { isDemoMode, mockCourses } from '../../lib/mockData'
 
 const auth = useAuthStore()
 const store = useCourseStore()
@@ -108,6 +109,14 @@ function formatDate(d) { return new Date(d).toLocaleDateString('ko-KR') }
 
 async function createCourse() {
   creating.value = true
+  if (isDemoMode()) {
+    const mock = { id: 'c-' + Date.now(), ...newCourse, instructor_id: auth.user.id, created_at: new Date().toISOString(), enrollments: [{ count: 0 }] }
+    store.courses.push(mock)
+    showCreateModal.value = false
+    Object.assign(newCourse, { title: '', description: '', category: '일반', max_students: 100, is_published: false })
+    creating.value = false
+    return
+  }
   try {
     await store.createCourse({ ...newCourse, instructor_id: auth.user.id })
     showCreateModal.value = false
@@ -121,6 +130,10 @@ async function createCourse() {
 
 async function handleDelete(id) {
   if (!confirm('정말 이 강의를 삭제하시겠습니까?')) return
+  if (isDemoMode()) {
+    store.courses = store.courses.filter(c => c.id !== id)
+    return
+  }
   try {
     await store.deleteCourse(id)
     await store.fetchInstructorCourses(auth.user.id)
@@ -129,5 +142,12 @@ async function handleDelete(id) {
   }
 }
 
-onMounted(() => store.fetchInstructorCourses(auth.user.id))
+onMounted(() => {
+  if (isDemoMode()) {
+    store.courses = mockCourses.map(c => ({ ...c, enrollments: [{ count: Math.floor(Math.random() * 20) }] }))
+    store.loading = false
+  } else {
+    store.fetchInstructorCourses(auth.user.id)
+  }
+})
 </script>
