@@ -110,9 +110,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { computed, onMounted, ref, watch } from 'vue'
 import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
 const now = new Date()

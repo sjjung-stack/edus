@@ -39,7 +39,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/edus/'),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 

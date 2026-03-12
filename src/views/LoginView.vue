@@ -25,19 +25,20 @@
       <div class="demo-section">
         <p class="demo-title">빠른 데모 로그인</p>
         <div class="demo-buttons">
-          <button class="demo-btn demo-admin" @click="demoLogin('admin')">
+          <button class="demo-btn demo-admin" @click="demoLogin('admin')" :disabled="demoLoading">
             <span class="demo-icon">⚙️</span>
             <span>관리자</span>
           </button>
-          <button class="demo-btn demo-instructor" @click="demoLogin('instructor')">
+          <button class="demo-btn demo-instructor" @click="demoLogin('instructor')" :disabled="demoLoading">
             <span class="demo-icon">👨‍🏫</span>
             <span>강사</span>
           </button>
-          <button class="demo-btn demo-student" @click="demoLogin('student')">
+          <button class="demo-btn demo-student" @click="demoLogin('student')" :disabled="demoLoading">
             <span class="demo-icon">🎓</span>
             <span>수강생</span>
           </button>
         </div>
+        <p v-if="demoLoading" style="text-align:center;font-size:12px;color:var(--gray-400);margin-top:8px;">로그인 중...</p>
       </div>
 
       <p class="auth-footer">
@@ -73,23 +74,26 @@ async function handleLogin() {
   }
 }
 
-const demoProfiles = {
-  admin: { full_name: '박운영', email: 'admin@demo.lms', role: 'admin' },
-  instructor: { full_name: '김전문', email: 'instructor@demo.lms', role: 'instructor' },
-  student: { full_name: '이열공', email: 'student@demo.lms', role: 'student' }
+const demoAccounts = {
+  admin: { email: 'admin1773219058834@lms.test', password: 'Test1234!!' },
+  instructor: { email: 'instr1773219058834@lms.test', password: 'Test1234!!' },
+  student: { email: 'stu1773219058834@lms.test', password: 'Test1234!!' }
 }
 
-function demoLogin(role) {
-  const p = demoProfiles[role]
-  const mockId = `demo-${role}-${Date.now()}`
+const demoLoading = ref(false)
 
-  auth.user = { id: mockId, email: p.email, user_metadata: { full_name: p.full_name, role: p.role } }
-  auth.profile = { id: mockId, ...p }
-  auth.loading = false
-
-  localStorage.setItem('lms_demo_user', JSON.stringify({ user: auth.user, profile: auth.profile }))
-
-  router.push('/')
+async function demoLogin(role) {
+  demoLoading.value = true
+  error.value = ''
+  try {
+    const acc = demoAccounts[role]
+    await auth.signIn(acc.email, acc.password)
+    router.push('/')
+  } catch (e) {
+    error.value = `데모 로그인 실패: ${e.message}. 회원가입 후 실제 계정으로 로그인해 주세요.`
+  } finally {
+    demoLoading.value = false
+  }
 }
 </script>
 
